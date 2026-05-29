@@ -1,6 +1,4 @@
 #include "ft_malcolm.h"
-//eliminar luego
-#include "include/malcolm.h"
 
 #include <stddef.h>
 #include <stdio.h>
@@ -232,9 +230,9 @@ static void snoop_payload(unsigned char *buffer, struct iphdr *ip, ssize_t bytes
 
 			if (payload_size > 0)
 			{
-				if (memmem(payload, payload_size, "STOR ", 5))
+				if (ft_memmem(payload, payload_size, "STOR ", 5))
 					printf("\033[1;31m[FT_MALCOLM] DETECTADO 'PUT': %.*s\033[0m", payload_size, payload);
-				else if (memmem(payload, payload_size, "RETR ", 5))
+				else if (ft_memmem(payload, payload_size, "RETR ", 5))
 					printf("\033[1;34m[FT_MALCOLM] DETECTADO 'GET': %.*s\033[0m", payload_size, payload);
 			}
 }

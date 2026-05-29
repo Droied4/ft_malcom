@@ -9,7 +9,7 @@ DEP_FLAGS = -MMD -MP
 #ADR_FLAGS = -fsanitize=address -g
 CFLAGS = $(FLAGS) -I $(IDIR) $(DEP_FLAGS) #$(ADR_FLAGS)
 
-SRC = malcolm.c parse.c
+SRC = malcolm.c parse.c aux.c
 IDIR = ./include 
 OBJ = $(addprefix $(OBJS_PATH)/, ${SRC:.c=.o})
 DEPS = ${OBJ:.o=.d}

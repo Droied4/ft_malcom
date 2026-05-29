@@ -1,5 +1,5 @@
-#ifndef INQUISITOR_HPP
-# define INQUISITOR_HPP
+#ifndef MALCOLM_HPP 
+# define MALCOLM_HPP 
 
 # include <string.h>
 # include <arpa/inet.h>
@@ -27,7 +27,15 @@ struct arp_packet {
 //[PARSE]
 void parse_input(char *av[], t_session *session);
 
-//[INQUISITOR]
+//[MALCOLM]
 void error(const char *message);
+
+//[AUX]
+size_t	ft_strlen(const char *s);
+void	*ft_memcpy(void *dst, const void *src, size_t n);
+void	*ft_memset(void *str, int c, size_t len);
+void *ft_memmem(const void *haystack, size_t haystacklen,
+                const void *needle, size_t needlelen);
+int	ft_memcmp(const void *s1, const void *s2, size_t n);
 
 #endif 

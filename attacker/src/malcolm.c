@@ -1,6 +1,6 @@
-#include "inquisitor.h"
+#include "ft_malcolm.h"
 //eliminar luego
-#include "include/inquisitor.h"
+#include "include/malcolm.h"
 
 #include <stddef.h>
 #include <stdio.h>
@@ -20,7 +20,7 @@ volatile int loop = 42;
 
 static void usage(void)
 {
-	printf("./inquisitor [IP-src] [MAC-src] [IP-target] [MAC-target]\n");
+	printf("./ft_malcolm [IP-src] [MAC-src] [IP-target] [MAC-target]\n");
 	exit(1);
 }
 
@@ -34,7 +34,7 @@ static void cleaning(int socket, struct ifaddrs *ifaddr)
 
 void error(const char *message)
 {
-	printf("[INQUISITOR] error: %s\n", message);
+	printf("[FT_MALCOLM] error: %s\n", message);
 	exit(1);
 }
 
@@ -233,9 +233,9 @@ static void snoop_payload(unsigned char *buffer, struct iphdr *ip, ssize_t bytes
 			if (payload_size > 0)
 			{
 				if (memmem(payload, payload_size, "STOR ", 5))
-					printf("\033[1;31m[INQUISITOR] DETECTADO 'PUT': %.*s\033[0m", payload_size, payload);
+					printf("\033[1;31m[FT_MALCOLM] DETECTADO 'PUT': %.*s\033[0m", payload_size, payload);
 				else if (memmem(payload, payload_size, "RETR ", 5))
-					printf("\033[1;34m[INQUISITOR] DETECTADO 'GET': %.*s\033[0m", payload_size, payload);
+					printf("\033[1;34m[FT_MALCOLM] DETECTADO 'GET': %.*s\033[0m", payload_size, payload);
 			}
 }
 
@@ -327,5 +327,3 @@ int main (int ac, char *av[])
 	cleaning(socket, ifaddr);
 	return (0);
 }
-
-//pal ftmalcom quitar el sleep y hacer memcpy memset memmem y todo lo de mem

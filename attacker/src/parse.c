@@ -1,4 +1,4 @@
-#include "inquisitor.h"
+#include "ft_malcolm.h"
 
 static int is_hexdigit(char c)
 {

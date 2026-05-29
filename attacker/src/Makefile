@@ -1,4 +1,4 @@
-NAME = inquisitor 
+NAME = ft_malcolm 
 
 CC = gcc
 
@@ -9,7 +9,7 @@ DEP_FLAGS = -MMD -MP
 #ADR_FLAGS = -fsanitize=address -g
 CFLAGS = $(FLAGS) -I $(IDIR) $(DEP_FLAGS) #$(ADR_FLAGS)
 
-SRC = inquisitor.c parse.c
+SRC = malcolm.c parse.c
 IDIR = ./include 
 OBJ = $(addprefix $(OBJS_PATH)/, ${SRC:.c=.o})
 DEPS = ${OBJ:.o=.d}

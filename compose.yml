@@ -1,0 +1,35 @@
+networks:
+  app-network: {}
+
+services:
+  attacker:
+    container_name: attacker 
+    build: 
+      context: 
+        ${ATTACKER_PATH}
+    image: attacker 
+    networks:
+      - ${NETWORK}
+    volumes:
+      - ./attacker/src/:/app/
+    restart: unless-stopped
+
+  server:
+    container_name: adummy 
+    build:
+      context:
+        ${SERVER_PATH}
+    image: adummy 
+    networks:
+      - ${NETWORK}
+    restart: unless-stopped
+
+  client:
+    container_name: bdummy 
+    build:
+      context:
+        ${CLIENT_PATH}
+    image: bdummy 
+    networks:
+      - ${NETWORK}
+    restart: unless-stopped

